@@ -44,19 +44,35 @@ public final class Valet: NSObject {
     }
 
     /// - Parameters:
-    ///   - identifier: A non-empty string that must correspond with the value for keychain-access-groups in your Entitlements file.
+    ///   - identifier: A non-empty string that uniquely identifies a Valet.
     ///   - accessibility: The desired accessibility for the Valet.
-    /// - Returns: A Valet that reads/writes keychain elements that can be shared across applications written by the same development team.
-    public class func sharedAccessGroupValet(with identifier: Identifier, accessibility: Accessibility) -> Valet {
-        findOrCreate(identifier, configuration: .valet(accessibility), sharedAccessGroup: true)
+    /// - Returns: A Valet ... @FDIAZ TODO
+    public class func sharedAppGroupValet(with identifier: Identifier, accessibility: Accessibility) -> Valet {
+        findOrCreate(identifier, configuration: .valet(accessibility))
     }
 
     /// - Parameters:
     ///   - identifier: A non-empty string that must correspond with the value for keychain-access-groups in your Entitlements file.
     ///   - accessibility: The desired accessibility for the Valet.
-    /// - Returns: A Valet (synchronized with iCloud) that reads/writes keychain elements that can be shared across applications written by the same development team.
+    /// - Returns: A Valet that reads/writes keychain elements that can be shared across applications written by the same development team. @FDIAZ TODO
+    public class func sharedAccessGroupValet(with identifier: Identifier, accessibility: Accessibility) -> Valet {
+        findOrCreate(identifier, configuration: .valet(accessibility), sharedType: .keychainAccessGroup)
+    }
+
+    /// - Parameters:
+    ///   - identifier: A non-empty string that must correspond with the value for keychain-access-groups in your Entitlements file.
+    ///   - accessibility: The desired accessibility for the Valet.
+    /// - Returns: A Valet (synchronized with iCloud) that reads/writes keychain elements that can be shared across applications written by the same development team. @FDIAZ TODO
     public class func iCloudSharedAccessGroupValet(with identifier: Identifier, accessibility: CloudAccessibility) -> Valet {
-        findOrCreate(identifier, configuration: .iCloud(accessibility), sharedAccessGroup: true)
+        findOrCreate(identifier, configuration: .iCloud(accessibility), sharedType: .keychainAccessGroup)
+    }
+
+    /// - Parameters:
+    ///   - identifier: A non-empty string that must correspond with the value for keychain-access-groups in your Entitlements file.
+    ///   - accessibility: The desired accessibility for the Valet.
+    /// - Returns: A Valet (synchronized with iCloud) that reads/writes keychain elements that can be shared across applications written by the same development team. // @FDIAZ TODO
+    public class func iCloudSharedAppGroupValet(with identifier: Identifier, accessibility: CloudAccessibility) -> Valet {
+        findOrCreate(identifier, configuration: .iCloud(accessibility), sharedType: .appGroup)
     }
 
     #if os(macOS)
@@ -118,15 +134,36 @@ public final class Valet: NSObject {
 
     // MARK: Private Class Functions
 
-    private class func findOrCreate(_ identifier: Identifier, configuration: Configuration, sharedAccessGroup: Bool = false) -> Valet {
-        let service: Service = sharedAccessGroup ? .sharedAccessGroup(identifier, configuration) : .standard(identifier, configuration)
+    private enum SharedType {
+        case notShared
+        case appGroup
+        case keychainAccessGroup
+
+        func service(with identifier: Identifier, configuration: Configuration) -> Service {
+            switch self {
+            case .notShared:
+                return .standard(identifier, configuration)
+            case .appGroup:
+                return .sharedAppGroup(identifier, configuration)
+            case .keychainAccessGroup:
+                return .sharedAccessGroup(identifier, configuration)
+            }
+        }
+
+        var isShared: Bool {
+            return self != .notShared
+        }
+    }
+
+    private class func findOrCreate(_ identifier: Identifier, configuration: Configuration, sharedType: SharedType = .notShared) -> Valet {
+        let service: Service = sharedType.service(with: identifier, configuration: configuration)
         let key = service.description as NSString
         if let existingValet = identifierToValetMap.object(forKey: key) {
             return existingValet
 
         } else {
             let valet: Valet
-            if sharedAccessGroup {
+            if sharedType.isShared {
                 valet = Valet(sharedAccess: identifier, configuration: configuration)
             } else {
                 valet = Valet(identifier: identifier, configuration: configuration)
@@ -368,6 +405,8 @@ public final class Valet: NSObject {
         switch service {
         case .sharedAccessGroup:
             serviceAttribute = Service.sharedAccessGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
+        case .sharedAppGroup:
+            serviceAttribute = Service.sharedAppGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         case .standard:
             serviceAttribute = Service.standard(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         #if os(macOS)
@@ -403,6 +442,8 @@ public final class Valet: NSObject {
         switch service {
         case .sharedAccessGroup:
             serviceAttribute = Service.sharedAccessGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
+        case .sharedAppGroup:
+            serviceAttribute = Service.sharedAppGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         case .standard:
             serviceAttribute = Service.standard(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         #if os(macOS)
@@ -562,6 +603,8 @@ extension Valet {
         }
         return findOrCreate(explicitlySet: identifier, configuration: .valet(accessibility), sharedAccessGroup: true)
     }
+
+    // @FDIAZ TODO: Add Objective-C wrapper for App Group Shared Access
 
     /// Creates an iCloud-shared-access-group Valet with an explicitly set kSecAttrService.
     /// - Parameters:

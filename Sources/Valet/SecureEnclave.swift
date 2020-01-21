@@ -46,6 +46,8 @@ public final class SecureEnclave {
         #endif
         case .sharedAccessGroup:
             noPromptValet = .sharedAccessGroupValet(with: identifier, accessibility: .whenPasscodeSetThisDeviceOnly)
+        case .sharedAppGroup:
+            noPromptValet = .sharedAppGroupValet(with: identifier, accessibility: .whenPasscodeSetThisDeviceOnly)
         }
         
         return noPromptValet.canAccessKeychain()
