@@ -414,6 +414,8 @@ public final class Valet: NSObject {
             serviceAttribute = Service.sharedAccessGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         case .standardOverride:
             serviceAttribute = Service.standard(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
+        case .sharedAppGroupOverride:
+            serviceAttribute = Service.sharedAppGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         #endif
         }
         keychainQuery[kSecAttrService as String] = serviceAttribute
@@ -451,6 +453,8 @@ public final class Valet: NSObject {
             serviceAttribute = Service.sharedAccessGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         case .standardOverride:
             serviceAttribute = Service.standard(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
+        case .sharedAppGroupOverride:
+            serviceAttribute = Service.sharedAppGroup(with: configuration, identifier: identifier, accessibilityDescription: accessibilityDescription)
         #endif
         }
         keychainQuery[kSecAttrService as String] = serviceAttribute

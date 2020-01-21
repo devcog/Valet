@@ -46,6 +46,10 @@ public final class SecureEnclave {
         #endif
         case .sharedAccessGroup:
             noPromptValet = .sharedAccessGroupValet(with: identifier, accessibility: .whenPasscodeSetThisDeviceOnly)
+        #if os(macOS)
+        case .sharedAppGroupOverride:
+            fallthrough
+        #endif
         case .sharedAppGroup:
             noPromptValet = .sharedAppGroupValet(with: identifier, accessibility: .whenPasscodeSetThisDeviceOnly)
         }

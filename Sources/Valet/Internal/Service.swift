@@ -110,6 +110,10 @@ internal enum Service: CustomStringConvertible, Equatable {
                 baseQuery[kSecAttrAccessGroup as String] = "\(sharedAccessGroupPrefix).\(identifier.description)"
             }
             configuration = desiredConfiguration
+
+        case let .sharedAppGroupOverride(identifier, desiredConfiguration):
+            baseQuery[kSecAttrAccessGroup as String] = identifier.description
+            configuration = desiredConfiguration
         #endif
         }
         
@@ -143,7 +147,8 @@ internal enum Service: CustomStringConvertible, Equatable {
             service = Service.sharedAppGroup(with: configuration, identifier: identifier, accessibilityDescription: configuration.accessibility.description)
         #if os(macOS)
         case let .standardOverride(identifier, _),
-             let .sharedAccessGroupOverride(identifier, _):
+             let .sharedAccessGroupOverride(identifier, _),
+             let .sharedAppGroupOverride(identifier, _):
             service = identifier.description
         #endif
         }
@@ -166,7 +171,8 @@ internal enum Service: CustomStringConvertible, Equatable {
 
         #if os(macOS)
         case .standardOverride,
-             .sharedAccessGroupOverride:
+             .sharedAccessGroupOverride,
+             .sharedAppGroupOverride:
             return service
         #endif
         }
